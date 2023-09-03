@@ -3,11 +3,47 @@ import { useState, useRef, useImperativeHandle } from 'react'
 import {Link,
 BrowserRouter as Router,
 Routes, Route,
-useMatch
+useMatch,
+useNavigate,
+Navigate
 } from 'react-router-dom'
+import { Table, Form, Alert, Navbar, Nav } from 'react-bootstrap'
+import styled from 'styled-components'
+
+const Button = styled.button`
+  background: Bisque;
+  font-size: 1em;
+  margin: 1em;
+  padding: 0.25em 1em;
+  border: 2px solid Chocolate;
+  border-radius: 13px;
+`
+
+const Input = styled.input`
+  margin: 0.25em;
+  border-radius: 8px;
+`
+
+const Page = styled.div`
+  padding: 1em;
+  background: papayawhip;
+`
+
+const Navigation = styled.div`
+  background: BurlyWood;
+  padding: 1em;
+  border-radius: 13px;
+`
+
+const Footer = styled.div`
+  background: Chocolate;
+  padding: 1em;
+  margin-top: 1em;
+  border-radius: 13px;
+`
 
 
-const Menu = ({anecdotes, anecdote, addNew, addNewRef}) => {
+const Menu = ({anecdotes, anecdote, addNew, addNewRef, user, login}) => {
   const padding = {
     paddingRight: 5
   }
@@ -15,9 +51,17 @@ const Menu = ({anecdotes, anecdote, addNew, addNewRef}) => {
     <div>
       
         <div>
-          <Link style = {padding} to = "/">anecdotes</Link>
-          <Link style = {padding} to = "/about">about</Link>
-          <Link style = {padding} to = "/create">create new</Link>
+        <Navigation>
+                  <Link style = {padding} to = "/">anecdotes</Link>
+                  <Link style = {padding} to = "/about">about</Link>
+                  <Link style = {padding} to = "/create">create new</Link>
+                  <Link style = {padding} to = "/users">users</Link>
+                
+                {user
+                  ? <em>{user} logged in</em>
+                  : <Link to="/login">login</Link>
+                }
+        </Navigation>
         </div>
       
 
@@ -26,9 +70,12 @@ const Menu = ({anecdotes, anecdote, addNew, addNewRef}) => {
           <Route path = '/' element = {<AnecdoteList anecdotes = {anecdotes} />} />
           <Route path = '/about' element = {<About />} />
           <Route path = '/create' element = {<CreateNew anecdotes = {anecdotes} addNew={addNew} />} />
+          <Route path = '/users' element = {user ? <Users /> : <Navigate replace to="/login" />} />
+          <Route path="/login" element={<Login onLogin={login} />} />
         </Routes>
-      
-      <Footer />
+      <Footer>
+        <TFooter />
+      </Footer>
     </div>
   )
 }
@@ -38,12 +85,12 @@ const Anecdote = ({anecdote}) => {
   const padding = {
     padding: 5
   }
-  console.log('anecdote', anecdote)
+  console.log('anecdote Anecdote info', anecdote.info)
 	return(
 		<div>
 			<h2 style = {padding}> {anecdote.content} by {anecdote.author}</h2>
       <div style = {padding}> has {anecdote.votes} votes</div>
-			<div style = {padding}> for more info see <a href = "{anecdote.info}">{anecdote.info}</a></div>
+			<div style = {padding}> for more info see <a href = {anecdote.info}>{anecdote.info}</a></div>
 			
 		</div>
 	)
@@ -56,16 +103,67 @@ const AnecdoteList = ({ anecdotes }) => {
   return (
     <div>
       <h2>Anecdotes</h2>
-      <ul>
-        {anecdotes.map(anecdote => 
-          <li key={anecdote.id} >
-            <Link to ={`/anecdotes/${anecdote.id}`}> {anecdote.content}</Link>
-          </li>
-        )}
-      </ul>
+      <Table striped>
+        <tbody>
+          {anecdotes.map(anecdote => 
+            <tr key={anecdote.id} >
+              <td>
+                 <Link to ={`/anecdotes/${anecdote.id}`}> 
+                  {anecdote.content}
+                 </Link>
+              </td>
+              <td>
+                {anecdote.author}
+              </td>
+           </tr>
+          )}
+        </tbody>
+      </Table>
     </div>
   )
 }
+
+const Users = () => (
+  <div>
+    <h2>TKTL notes app</h2>
+    <ul>
+      <li>Matti Luukkainen</li>
+      <li>Juha Tauriainen</li>
+      <li>Arto Hellas</li>
+    </ul>
+  </div>
+)
+
+const Login = (props) => {
+  const navigate = useNavigate()
+
+  const onSubmit = (event) => {
+    event.preventDefault()
+    props.onLogin('mluukkai')
+    navigate('/')
+  }
+
+  return (
+    <div>
+      <h2>login</h2>
+      <Form onSubmit={onSubmit}>
+      <div>
+        username:
+        <Input />
+      </div>
+      <div>
+        password:
+        <Input type = 'password' />
+      </div>
+        
+          <Button primary = '' type="submit">
+            login
+          </Button>
+      </Form>
+    </div>
+  )
+}
+
 
 const About = () => (
   <div>
@@ -81,7 +179,7 @@ const About = () => (
   </div>
 )
 
-const Footer = () => (
+const TFooter = () => (
   <div>
     Anecdote app for <a href='https://fullstackopen.com/'>Full Stack Open</a>.
 
@@ -89,7 +187,7 @@ const Footer = () => (
   </div>
 )
 
-const CreateNew = ({addNew, anecdotes}) => {
+const CreateNew = (props, {addNew, anecdotes}) => {
   const [content, setContent] = useState('')
   const [author, setAuthor] = useState('')
   const [info, setInfo] = useState('')
@@ -97,21 +195,20 @@ const CreateNew = ({addNew, anecdotes}) => {
   console.log('createnew anecdotes', anecdotes)
 
   const handleSubmit = (e) => {
-    console.log('createnew addNew', e.addNew)
+    console.log('createnew addNew', addNew)
     console.log('handleSub props')
     console.log('content', content)
     console.log('auth', author)
     console.log('info', info)
     e.preventDefault()
-    const addAnecdote = () => {
-      addNew({
+    props.addNew({
         content,
         author,
         info,
         votes: 0
-      })
-    }
-    addAnecdote()
+    })
+    navigate('/')
+    
     console.log('dd')
   }
 
@@ -169,6 +266,9 @@ const App = () => {
 
   const [notification, setNotification] = useState('')
 
+  const [user, setUser] = useState(null)
+  const [message, setMessage] = useState(null)
+
   const addNew = (anecdote) => {
     console.log('addnew anec', anecdote)
     anecdote.id = Math.round(Math.random() * 10000)
@@ -179,6 +279,14 @@ const App = () => {
  
   const anecdoteById = (id) =>
     anecdotes.find(a => a.id === id)
+
+  const login = (user) => {
+    setUser(user)
+    setMessage(`welcome ${user}`)
+    setTimeout(() => {
+      setMessage(null)
+    }, 10000)
+  }
 
   const vote = (id) => {
     const anecdote = anecdoteById(id)
@@ -202,11 +310,17 @@ const App = () => {
   console.log('anecdote din app', anecdote)
   return (
 
-    
-    <div>
+  <Page>
+    <div className = "container">
+      {(message &&
+        <Alert variant="success">
+          {message}
+        </Alert>
+      )}
       <h1>Software anecdotes</h1>
-      <Menu anecdotes = {anecdotes} anecdote = {anecdote}/>
+      <Menu anecdotes = {anecdotes} anecdote = {anecdote} addNew = {addNew}/>
     </div>
+  </Page>
     
   )
 }
