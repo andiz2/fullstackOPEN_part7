@@ -131,12 +131,7 @@ const App = () => {
   const addLike = (idAddLike) => {
     let newList = [...blogs]
     let toUpdate = newList.find(blog => blog.id === idAddLike)
-    // const blogObject = {
-    //   title: blog.title,
-    //   author: blog.author,
-    //   url: blog.url,
-    //   likes: likes++
-    // }
+
     toUpdate.likes++
     console.log("blogs", blogs)
     console.log("newList", newList)
@@ -199,7 +194,9 @@ const App = () => {
              />
         </Togglable>
         
-          {blogs.map(blog =>
+          {blogs
+          .sort((a, b) => (a.likes <= b.likes) ? 1 : -1)
+          .map(blog =>
             <Blog key={blog.id} blog={blog} username = {user.name}
             deleteBlog = {() => deleteBlog(blog.id)}
             addLike = {() => addLike(blog.id)}
